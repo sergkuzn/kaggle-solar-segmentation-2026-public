@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# filseg: data and artifacts (never commit; `filseg download/prepare`, `filseg fetch-weights`)
+/data/
+/outputs/
+*.pt
+*.pth
+*.zip
+/temp/

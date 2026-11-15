@@ -1,0 +1,26 @@
+# The submitted pipeline: the mean of the probability maps of two seeds of the same U-Net
+# (v2__unet_r34_v2_bce, seed 42; v4__unet_r34_v2_bce_s43, seed 43), then the learned scorer.
+# No models of its own: blend -> tune -> fit-scorer -> predict.
+# Nested-crossfit OOF PQ 0.4643; public leaderboard 0.40.
+name: v4__unet_r34_v2_bce_x2
+seed: 42
+n_folds: 5
+blend: [v2__unet_r34_v2_bce, v4__unet_r34_v2_bce_s43]
+post:                 # defaults until `filseg tune` writes outputs/<name>/post_params.json
+  t_low: 0.35
+  t_high: 0.5
+  close_radius: 2
+  min_area: 150
+  min_score: 0.0
+tune:                 # grid searched on the OOF maps; the scorer reuses the best t_low / close_radius
+  t_low: [0.25, 0.3, 0.35, 0.4, 0.45]
+  close_radius: [2, 4, 6, 8]
+  t_high: [0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+  min_area: [50, 100, 150, 200, 300]
+  min_score: [0.0, 0.4, 0.45, 0.5, 0.55, 0.6]
+scorer:
+  mode: flat
+  n_estimators: 200
+  n_bags: 5           # 5 boosters with seeds 42..46, scores averaged
+  # the score never falls with the blob's probability, never rises with the ring's
+  monotone: {p_mean: 1, p_q10: 1, p_q50: 1, p_q90: 1, p_max: 1, ring_p: -1}

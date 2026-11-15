@@ -1,0 +1,39 @@
+# Member of the final blend v4__unet_r34_v2_bce_x2 (seed 42).
+# U-Net / ResNet-34 with a spine head on the raw + flat channels, trained on the soft
+# annotator-consensus target with BCE (+ 0.3 x spine BCE), 5 folds; test maps with D4 TTA.
+name: v2__unet_r34_v2_bce
+seed: 42
+n_folds: 5            # must match `filseg prepare --n-folds` (folds.csv)
+folds: null           # all 5 folds
+data:
+  channels: [raw, flat]
+  crop: 1888          # centred, covers every annotated filament; no tiling
+  train_crop: 768     # random windows, 70% centred on filament pixels
+  fg_prob: 0.7
+  cache: read_write   # off | read | read_write; inputs in data/processed/input_cache/
+model:
+  arch: Unet
+  encoder: resnet34
+  encoder_weights: imagenet
+  spine_head: true
+train:
+  epochs: 80
+  steps_per_epoch: 200
+  batch_size: 8
+  lr: 3.0e-4
+  weight_decay: 1.0e-2
+  warmup_epochs: 1
+  spine_weight: 0.3
+  grad_clip: 1.0
+  amp: true
+  num_workers: 8
+  val_every: 2        # validation PQ (fixed `post` rule) picks each fold's checkpoint
+  val_limit: null
+infer:
+  tta: d4             # all 8 dihedral views, averaged
+post:                 # the fixed rule used for checkpoint selection during training
+  t_low: 0.35
+  t_high: 0.5
+  close_radius: 2
+  min_area: 150
+  min_score: 0.0
